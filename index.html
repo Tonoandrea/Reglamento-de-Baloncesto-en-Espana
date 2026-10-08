@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reglamento de Baloncesto en España por Toño Andrea</title>
+<style>
+:root{--bg:#f2f5f2;--card:#fff;--ink:#14212b;--mute:#4f5d68;--court:#0e5a4f;--onc:#fff;--ball:#c94a12;--line:#d3dbd6;--ok:#1b7a43;--bad:#b3261e;--soft:#e2eee8;--fh:Rockwell,"Roboto Slab",Georgia,serif;--fb:"Avenir Next","Segoe UI",system-ui,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1a1d;--card:#17262a;--ink:#e8efec;--mute:#a7b7b2;--court:#4cc1ab;--onc:#0b1517;--ball:#ff8a4d;--line:#2c4046;--ok:#5fd18b;--bad:#ff9a90;--soft:#1d3a35}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 var(--fb)}
+.wrap{max-width:780px;margin:0 auto;padding:20px 16px 48px}
+header h1{font:700 clamp(1.6rem,5vw,2.3rem)/1.15 var(--fh);margin:8px 0 6px}
+header p{margin:0 0 16px;color:var(--mute);max-width:62ch}
+.dots{display:flex;gap:6px;list-style:none;padding:0;margin:0 0 14px}
+.dots button{width:100%;height:12px;border:0;border-radius:6px;background:var(--line);cursor:pointer;padding:0}
+.dots li{flex:1}.dots .done button{background:var(--court);opacity:.45}.dots .on button{background:var(--ball);opacity:1}
+#lbl{font-size:.9rem;color:var(--mute);margin:0 0 8px}
+#stage{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 20px;min-height:380px}
+#stage h2{font:700 1.5rem/1.25 var(--fh);margin:0 0 12px;outline:0}
+#stage p{margin:0 0 12px;max-width:68ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.fact{background:var(--soft);border-radius:10px;padding:12px}
+.fact b{display:block;font:700 1.35rem var(--fh);color:var(--court)}
+.ex{border-left:4px solid var(--ball);padding:6px 12px;margin:12px 0;background:var(--soft);border-radius:0 8px 8px 0}
+.new{display:inline-block;background:var(--ball);color:#fff;border-radius:6px;padding:0 8px;font-size:.85rem;font-weight:700;margin-right:6px}
+button.b,.opts button,.chips button{font:inherit;cursor:pointer;border-radius:9px;border:1.5px solid var(--court);background:transparent;color:var(--ink);padding:8px 14px;min-height:42px}
+button.b.p,#next{background:var(--court);color:var(--onc)}
+button:focus-visible,.zone:focus-visible{outline:3px solid var(--ball);outline-offset:2px}
+.chips,.opts,.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.chips button.sel,.opts button:hover{background:var(--soft)}
+.q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:14px 0}
+.q p{margin:0 0 8px;font-weight:600}
+.opts button.ok{background:var(--ok);border-color:var(--ok);color:#fff}.opts button.no{border-color:var(--bad);color:var(--bad)}
+.fb{min-height:1.4em;margin:6px 0 0;font-size:.97rem}
+.fb.ok{color:var(--ok)}.fb.no{color:var(--bad)}
+#out{background:var(--soft);border-radius:10px;padding:10px 14px;min-height:64px;margin-top:8px}
+svg{max-width:340px;width:100%;display:block;margin:6px auto}
+.zone{cursor:pointer}.zone:hover{fill-opacity:.35}
+.clk{font:700 3.2rem/1 var(--fh);color:var(--ball);min-width:3ch}
+.cnt{font:700 2rem var(--fh)}
+table{border-collapse:collapse;width:100%;font-size:.95rem;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}th{background:var(--soft)}
+.tw{overflow-x:auto}
+nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+nav button{font:inherit;border-radius:9px;border:1.5px solid var(--court);padding:10px 20px;cursor:pointer;min-height:46px;background:transparent;color:var(--ink)}
+nav button:disabled{opacity:.35;cursor:default}
+small{color:var(--mute)}
+@media(prefers-reduced-motion:no-preference){.fb,#out{transition:background .2s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Reglamento de baloncesto en España</h1>
+<p>Un recorrido de 8 pasos, con ejemplos y pruebas, por las reglas FIBA que aplica la FEB. Incluye los cambios oficiales que entran en vigor el 1 de octubre de 2026.</p>
+</header>
+<ol class="dots" id="dots" aria-label="Progreso"></ol>
+<p id="lbl" aria-live="polite"></p>
+<main id="stage" aria-live="off"></main>
+<nav><button id="prev">Anterior</button><button id="next">Siguiente</button></nav>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let cur=0,timer=null,pf=0,tf=0;
+const allQ=new Set(),okQ=new Set();
+
+function quiz(id,q,opts,a,why){
+  allQ.add(id);
+  return `<div class="q" data-id="${id}" data-a="${a}" data-why="${why}"><p>${q}</p><div class="opts">${opts.map((o,i)=>`<button data-i="${i}">${o}</button>`).join('')}</div><p class="fb" aria-live="polite"></p></div>`;
+}
+const FT=['Falta personal','Falta disruptiva','Falta flagrante','Falta técnica'];
+
+const STEPS=[
+{t:'Lo básico: quién juega y quién manda',h:()=>`
+<p>El baloncesto lo juegan <b>dos equipos de 5 jugadores</b>. Cada equipo intenta meter el balón en la canasta rival e impedir que el contrario enceste. Gana quien tiene más puntos al terminar.</p>
+<p>El partido lo dirigen los árbitros, los oficiales de mesa (anotador, cronometrador…) y, si lo hay, un comisario. En España, la <b>FEB</b> aplica las Reglas Oficiales de la <b>FIBA</b>, la federación internacional.</p>
+<div class="facts"><div class="fact"><b>28 × 15 m</b>medidas de la pista</div><div class="fact"><b>3,05 m</b>altura del aro</div><div class="fact"><b>5 vs 5</b>jugadores en pista</div></div>
+<div class="ex"><b>Ejemplo:</b> un equipo puede tener 12 jugadores inscritos, pero solo 5 están en pista a la vez. Los demás entran mediante sustituciones.</div>
+${quiz('q1','¿Cuántos jugadores de cada equipo están en la pista al mismo tiempo?',['4','5','6'],1,'Son 5 por equipo, el resto espera en el banquillo.')}`},
+
+{t:'El tiempo: cuartos y reloj de posesión',h:()=>`
+<p>El partido se divide en <b>4 cuartos de 10 minutos</b> de tiempo de juego (el reloj se detiene en las interrupciones). Hay 2 minutos de descanso entre los cuartos 1-2 y 3-4, y 15 minutos en el descanso largo. Si hay empate, se juegan <b>prórrogas de 5 minutos</b>.</p>
+<p>Además, cada equipo dispone de <b>24 segundos</b> para lanzar a canasta. Pruébalo:</p>
+<div class="row"><span class="clk" id="clk">24</span><button class="b p" data-act="clock" data-v="24">Empezar posesión (24 s)</button><button class="b" data-act="clock" data-v="14">Rebote ofensivo (14 s)</button></div>
+<p id="clkmsg" aria-live="polite"><small>Si el reloj llega a 0 sin que el balón toque el aro en un tiro, es violación.</small></p>
+<p>Tiempos muertos: 2 en la primera parte, 3 en la segunda (máximo 2 en los últimos 2 minutos) y 1 por prórroga. <small>En categorías de base la duración puede variar: consulta el reglamento de tu competición.</small></p>
+${quiz('q2','Un equipo tira, el balón toca el aro y el mismo equipo coge el rebote. ¿A cuántos segundos se reinicia el reloj de posesión?',['24','14','8'],1,'Tras un rebote ofensivo se reinicia a 14 segundos.')}`},
+
+{t:'Los puntos: toca la pista',h:()=>`
+<p>Pulsa cada zona de la pista para ver cuántos puntos vale un lanzamiento desde ahí.</p>
+<svg viewBox="0 0 300 270" role="group" aria-label="Media pista con zonas de puntuación">
+<rect class="zone" data-z="three" tabindex="0" role="button" aria-label="Zona de 3 puntos" x="2" y="2" width="296" height="266" fill="#d9561a" fill-opacity=".18" stroke="currentColor" stroke-width="2"/>
+<path class="zone" data-z="two" tabindex="0" role="button" aria-label="Zona de 2 puntos" d="M30 2 V55 A122 122 0 0 0 270 55 V2 Z" fill="#0e8a74" fill-opacity=".22" stroke="currentColor" stroke-width="2"/>
+<rect x="110" y="2" width="80" height="115" fill="none" stroke="currentColor" stroke-width="2" pointer-events="none"/>
+<circle class="zone" data-z="ft" tabindex="0" role="button" aria-label="Tiro libre" cx="150" cy="117" r="22" fill="#f2b632" fill-opacity=".55" stroke="currentColor" stroke-width="2"/>
+<line x1="130" y1="14" x2="170" y2="14" stroke="currentColor" stroke-width="4" pointer-events="none"/>
+<circle cx="150" cy="30" r="7" fill="none" stroke="#d9561a" stroke-width="3" pointer-events="none"/>
+<text x="150" y="215" text-anchor="middle" font-size="14" fill="currentColor" pointer-events="none">3 puntos</text>
+<text x="150" y="85" text-anchor="middle" font-size="14" fill="currentColor" pointer-events="none">2 puntos</text>
+</svg>
+<div id="out" aria-live="polite">Toca una zona de la pista.</div>
+${quiz('q3','Un jugador lanza con un pie pisando la línea de tres y encesta. ¿Cuántos puntos vale?',['1','2','3'],1,'Pisar la línea convierte el tiro en uno de 2 puntos: hay que estar completamente detrás de ella.')}`},
+
+{t:'Violaciones: errores sin falta',h:()=>`
+<p>Una <b>violación</b> es una infracción de las reglas sin contacto con un rival. La sanción habitual es perder la posesión (saque para el contrario). Toca cada una:</p>
+<div class="chips" id="viol">${['Pasos','Dobles','3 segundos','5 segundos','8 segundos','Campo atrás'].map(v=>`<button data-act="viol" data-v="${v}">${v}</button>`).join('')}</div>
+<div id="out" aria-live="polite">Elige una violación para ver su explicación.</div>
+${quiz('q4','Un jugador bota, para con el balón en las manos y vuelve a botar. ¿Qué violación comete?',['Pasos','Dobles (doble regate)','Campo atrás'],1,'Después de acabar un regate no se puede empezar otro, salvo que se pierda el control por un tiro, un toque rival o un pase.')}
+${quiz('q5','Tu equipo ya está en campo contrario y un jugador pasa el balón de vuelta a su propio campo. ¿Qué ocurre?',['Nada, es legal','Violación de campo atrás','Falta técnica'],1,'Una vez en campo delantero, el equipo no puede devolver el balón al campo trasero con un pase.')}`},
+
+{t:'Faltas personales y faltas de equipo',h:()=>`
+<p>Una <b>falta</b> es una infracción con contacto ilegal o conducta antideportiva. Pulsa los botones para ver las consecuencias:</p>
+<div class="row"><div><div class="cnt" id="pf">0</div><small>faltas del jugador</small></div><button class="b p" data-act="pf">Falta al jugador n.º 7</button></div>
+<p id="pfm" aria-live="polite">A la <b>5.ª falta</b> el jugador queda eliminado y debe ser sustituido.</p>
+<div class="row"><div><div class="cnt" id="tf">0</div><small>faltas del equipo en el cuarto</small></div><button class="b p" data-act="tf">Falta del equipo</button><button class="b" data-act="rst">Reiniciar</button></div>
+<p id="tfm" aria-live="polite">Con 4 faltas de equipo en un cuarto, las siguientes se sancionan con <b>2 tiros libres</b> (situación de bonus).</p>
+<div class="ex"><b>Ejemplo:</b> tu equipo lleva 4 faltas en el 2.º cuarto. Un defensor toca el brazo de un rival que no está tirando: ya no hay saque de banda, sino 2 tiros libres.</div>
+<p>Si la falta se comete sobre un jugador que está lanzando y falla: 2 tiros libres (tiro de 2) o 3 (tiro de 3). Si encesta, vale la canasta y 1 tiro libre adicional.</p>
+${quiz('q6','Un jugador recibe falta mientras lanza de 3 puntos y falla. ¿Cuántos tiros libres lanza?',['1','2','3'],2,'Falta en tiro fallado: tantos tiros libres como puntos valía el lanzamiento.')}`},
+
+{t:'<span class="new">Novedad 2026</span>Adiós a la antideportiva',h:()=>`
+<p>Desde el <b>1 de octubre de 2026</b>, las reglas FIBA eliminan la falta antideportiva y la sustituyen por dos faltas según su gravedad. También las técnicas se dividen en dos categorías.</p>
+<div class="tw"><table><tr><th>Falta</th><th>Qué es</th><th>¿Cuenta para descalificar?</th></tr>
+<tr><td><b>Disruptiva</b></td><td>Contacto innecesario sin jugar el balón, que rompe el ritmo (parar un contraataque o el reloj al final de un cuarto) o falta por la espalda a quien va solo hacia el aro.</td><td>No</td></tr>
+<tr><td><b>Flagrante</b></td><td>Contacto que no es una acción legítima de juego, o es temerario, violento o peligroso.</td><td>Sí</td></tr>
+<tr><td><b>Técnica cat. 1</b></td><td>Conducta: protestar, provocar, simular una falta.</td><td>Sí</td></tr>
+<tr><td><b>Técnica cat. 2</b></td><td>Administrativa o de retraso: tocar el balón tras canasta para frenar el saque, colgarse del aro.</td><td>No</td></tr></table></div>
+<p>Un jugador es <b>descalificado</b> con: dos técnicas de categoría 1, dos flagrantes, o una técnica de categoría 1 más una flagrante. La disruptiva y la flagrante dan tiros libres y saque, como la antigua antideportiva.</p>
+<p><b>Clasifica estas situaciones:</b></p>
+${quiz('q7','Un defensor agarra a un atacante que corre en contraataque, sin intentar robar el balón.',FT,1,'Contacto innecesario para frenar una transición: falta disruptiva.')}
+${quiz('q8','Un defensor golpea con dureza a un rival en la cabeza de forma temeraria al ir hacia el balón.',FT,2,'Acto temerario o peligroso: falta flagrante.')}
+${quiz('q9','Un jugador insulta a un árbitro.',FT,3,'Es una falta técnica de categoría 1, de conducta, y cuenta para la descalificación.')}
+${quiz('q10','Un defensor golpea el balón tras la canasta para retrasar el saque rápido del rival. ¿Qué categoría de técnica?',['Categoría 1','Categoría 2'],1,'Retrasar el juego es una técnica de categoría 2: no cuenta para descalificar.')}`},
+
+{t:'<span class="new">Novedad 2026</span>Más cambios importantes',h:()=>`
+<p><b>Acción de tiro:</b> ahora se define con más precisión cuándo empieza y acaba, según el tipo de lanzamiento (entrada a canasta, tiro en suspensión). Además, un lanzamiento desde el campo trasero no es acción de tiro, salvo al final del cuarto o al agotarse el reloj de posesión.</p>
+<p><b>Regate:</b> tras acabar un regate no se puede botar otra vez, salvo que se pierda el control del balón por un tiro, un toque de un rival, o un pase o <i>fumble</i> que toque a otro jugador.</p>
+<p><b>Repetición instantánea:</b> los árbitros podrán revisar, en cualquier momento, una interferencia sobre el aro tras una falta, y en los últimos 2 minutos, una falta cometida durante un saque de banda.</p>
+<p><b>Otros:</b> las líneas del campo pueden tener colores distintos (con unas condiciones de contraste) y ya no es obligatorio que los calcetines se vean.</p>
+<div class="ex"><b>Ejemplo de regate:</b> un jugador bota, un rival toca el balón y se le escapa. Él lo recupera y vuelve a botar: es legal, porque perdió el control por un toque rival.</div>
+${quiz('q11','A mitad de partido, un jugador lanza desde su campo trasero y recibe una falta durante el lanzamiento. ¿Es falta en acción de tiro?',['Sí, siempre','No, salvo que fuera al final del cuarto o de la posesión'],1,'El lanzamiento desde el campo trasero solo es acción de tiro al final del período o del reloj de posesión.')}
+${quiz('q12','Tras acabar su bote, un jugador pierde el balón porque lo toca un rival. ¿Puede volver a botar?',['Sí','No'],0,'Perder el control por un toque rival permite un nuevo regate.')}`},
+
+{t:'Resumen y qué hacer ahora',h:()=>{
+  const n=okQ.size,t=allQ.size;
+  return `<p>Has acertado <b>${n} de ${t}</b> preguntas. ${n===t?'Resultado perfecto.':'Puedes volver atrás y repetir los pasos que quieras.'}</p>
+<div class="facts"><div class="fact"><b>5 vs 5</b>4 cuartos de 10 min</div><div class="fact"><b>24 s / 14 s</b>reloj de posesión</div><div class="fact"><b>5 faltas</b>jugador eliminado</div></div>
+<ul><li>Las violaciones se sancionan con pérdida de posesión; las faltas, con saque o tiros libres.</li>
+<li>Desde el 1-oct-2026 la antideportiva pasa a ser <b>disruptiva</b> o <b>flagrante</b>.</li>
+<li>Las técnicas son de <b>categoría 1</b> (descalifican) o <b>2</b> (no).</li></ul>
+<div class="ex"><b>Importante:</b> este tutorial es orientativo. La FEB aplica las reglas FIBA, pero cada competición (categoría, liga o territorial) puede fijar su fecha de aplicación y normas propias. Confirma las circulares y el reglamento de tu competición en <b>feb.es</b>. Fuente: documento oficial «Cambios en las Reglas Oficiales de Baloncesto de FIBA», julio de 2026.</div>`}}
+];
+
+const VIOL={'Pasos':'Dar más pasos de los permitidos con el balón en las manos. Ejemplo: recibir el balón, correr cuatro pasos sin botar.',
+'Dobles':'Botar, parar y volver a botar (o botar con las dos manos a la vez). Ejemplo: el base frena su bote, mira y vuelve a botar.',
+'3 segundos':'Un atacante no puede estar más de 3 segundos seguidos en la zona restringida (la «pintura») mientras su equipo controla el balón en campo delantero. Ejemplo: un pívot espera bajo el aro sin salir.',
+'5 segundos':'Tardar más de 5 segundos en sacar de banda, o mantener el balón 5 segundos con un rival muy cerca sin pasar, tirar ni botar.',
+'8 segundos':'Un equipo tiene 8 segundos para pasar el balón del campo propio al contrario. Ejemplo: un equipo presionado no logra cruzar la media pista a tiempo.',
+'Campo atrás':'Una vez el equipo ha pasado a campo contrario, no puede devolver el balón al propio campo. Ejemplo: el alero pasa atrás a un compañero que está en su campo.'};
+const ZON={three:'<b>Canasta de 3 puntos.</b> Se lanza desde detrás de la línea curva (6,75 m del aro), con los pies completamente fuera.',
+two:'<b>Canasta de 2 puntos.</b> Cualquier lanzamiento dentro de la línea de tres, incluidos los que se hacen pisándola.',
+ft:'<b>Tiro libre: 1 punto.</b> Se lanza sin oposición desde la línea de tiros libres, a 4,60 m del aro, tras ciertas faltas.'};
+
+const acts={
+ clock(b){clearInterval(timer);let t=+b.dataset.v;const c=$('#clk'),m=$('#clkmsg');c.textContent=t;m.innerHTML='<small>Reloj en marcha…</small>';
+  timer=setInterval(()=>{t--;c.textContent=Math.max(t,0);if(t<=0){clearInterval(timer);m.innerHTML='<b>¡Tiempo!</b> Sin lanzamiento válido, es violación y pierde la posesión.'}},1000)},
+ viol(b){document.querySelectorAll('#viol button').forEach(x=>x.classList.toggle('sel',x===b));$('#out').innerHTML='<b>'+b.dataset.v+'.</b> '+VIOL[b.dataset.v]},
+ pf(){pf++;$('#pf').textContent=pf;$('#pfm').innerHTML=pf>=5?'<b>Jugador eliminado.</b> Ha cometido 5 faltas y debe abandonar el partido.':'A la <b>5.ª falta</b> el jugador queda eliminado ('+(5-pf)+' restantes).'},
+ tf(){tf++;$('#tf').textContent=tf;$('#tfm').innerHTML=tf>=5?'<b>Bonus:</b> esta falta se sanciona con 2 tiros libres.':'Faltas hasta el bonus: '+(5-tf)+'. Con 4 faltas, las siguientes dan 2 tiros libres.'},
+ rst(){pf=tf=0;$('#pf').textContent=0;$('#tf').textContent=0}
+};
+function zone(z){$('#out').innerHTML=ZON[z]}
+
+document.addEventListener('click',e=>{
+ const a=e.target.closest('[data-act]');if(a)return acts[a.dataset.act](a);
+ const z=e.target.closest('.zone');if(z)return zone(z.dataset.z);
+ const o=e.target.closest('.q .opts button');if(!o)return;
+ const q=o.closest('.q'),fb=q.querySelector('.fb'),good=+q.dataset.a===+o.dataset.i;
+ if(good){q.querySelectorAll('.opts button').forEach(b=>b.classList.remove('no'));o.classList.add('ok');okQ.add(q.dataset.id);fb.className='fb ok';fb.textContent='Correcto. '+q.dataset.why}
+ else{o.classList.add('no');fb.className='fb no';fb.textContent='Casi. Inténtalo de nuevo.'}
+});
+document.addEventListener('keydown',e=>{const z=e.target.closest&&e.target.closest('.zone');if(z&&(e.key==='Enter'||e.key===' ')){e.preventDefault();zone(z.dataset.z)}});
+
+function render(){
+ clearInterval(timer);pf=tf=0;
+ $('#stage').innerHTML='<h2 tabindex="-1">'+STEPS[cur].t+'</h2>'+STEPS[cur].h();
+ $('#lbl').textContent='Paso '+(cur+1)+' de '+STEPS.length;
+ document.querySelectorAll('#dots li').forEach((li,i)=>{li.className=i<cur?'done':i===cur?'on':''});
+ $('#prev').disabled=cur===0;$('#next').disabled=cur===STEPS.length-1;
+}
+function go(i){cur=i;render();window.scrollTo({top:0,behavior:'auto'});$('#stage h2').focus({preventScroll:true})}
+STEPS.forEach(s=>s.h());
+$('#dots').innerHTML=STEPS.map((s,i)=>`<li><button aria-label="Ir al paso ${i+1}" onclick="go(${i})"></button></li>`).join('');
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+render();
+</script>
+</body>
+</html>
